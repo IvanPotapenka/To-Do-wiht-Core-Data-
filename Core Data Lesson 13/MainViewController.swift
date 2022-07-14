@@ -32,6 +32,7 @@ class MainViewController: UITableViewController {
     // MARK: Setup navigation bar
         
         private func setupNavigationBar() {
+            
             view.backgroundColor = .white
             title = "Tasks list"
             
@@ -40,11 +41,12 @@ class MainViewController: UITableViewController {
             navigationController?.navigationBar.prefersLargeTitles = true
             
             navigationItem.leftBarButtonItem = editButtonItem
+            let title = UIImage(systemName: "plus.app.fill")
             navigationItem.rightBarButtonItem = UIBarButtonItem(
-                title: "Add",
-                style: .plain,
-                target: self,
-                action: #selector(addNewTask))
+             image: title,
+             style: .plain,
+             target: self,
+             action: #selector(addNewTask))
             navigationController?.navigationBar.tintColor = .white
 }
     
@@ -85,7 +87,7 @@ class MainViewController: UITableViewController {
             let task = tasks[indexPath.row]
             
             let editAction = UITableViewRowAction(
-                                                  style: .default,
+                style: .normal,
                                                   title: "Edit",
                                                   handler: { (showAlert, edit)  in
                                                   self.showAlert(
@@ -173,6 +175,8 @@ extension MainViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
             let cell = tableView.dequeueReusableCell(withIdentifier: cellId, for: indexPath)
             let task = tasks[indexPath.row]
+        tableView.separatorStyle = .singleLine
+        cell.backgroundColor = UIColor(white: 1, alpha: 0.5)
             cell.textLabel?.text = task.name
             return cell
        }
