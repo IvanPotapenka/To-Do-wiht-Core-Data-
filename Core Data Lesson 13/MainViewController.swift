@@ -56,68 +56,67 @@ class MainViewController: UITableViewController {
        
      // MARK: Show alert
     
-        private func showAlert(title: String, messege: String) {
+        private func showAlert(
+                               title: String,
+                               messege: String,
+                               currentValue: Task? = nil,
+                               completion: ((String) -> ())? = nil) {
+            
             let alert = UIAlertController(title: title, message: messege, preferredStyle: .alert)
             let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
                 guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-                self.save(task)
+                
+                currentValue !== nil ? self.editRow(currentValue!, task) : self.save(task)
+                
                 self.tableView.reloadData()
-         }
+                    }
             let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
             alert.addTextField()
+            alert.textFields?.first?.text = currentValue?.name
+            
             alert.addAction(saveAction)
             alert.addAction(cancelAction)
         present(alert, animated: true)
 }
-     
-      // MARK: Edit Row In Table View
-    
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-     
-      // MARK: Edit Action For Row In Table View
+     // MARK: Edit Action For Row In Table View
     
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
-        
-        let editAction = UITableViewRowAction(style: .default, title: "Edit", handler: { (action, indexPath) in
-        let alert = UIAlertController(title: "", message: "Edit list item", preferredStyle: .alert)
             
-            alert.addTextField(configurationHandler: { (textField) in
-                textField.text = self.tasks[indexPath.row].name
-            }
-        )
-            alert.addAction(UIAlertAction(title: "Update", style: .default, handler: { (updateAction) in
-                
-                self.tasks[indexPath.row].name = alert.textFields?.first?.text
-                do {
-                    try self.manageContext.save()
-                }
-                catch let error { print(error.localizedDescription) }
-                tableView.reloadData()
-            }
-        )
-    )
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            self.present(alert, animated: false)
-        }
-    )
-
-        let deleteAction = UITableViewRowAction(style: .destructive, title: "Delete", handler: { (action, indexPath) in
-                        
-            self.manageContext.delete(self.tasks[indexPath.row]) 
-            self.tasks.remove(at: indexPath.row)
-            do {
-                try self.manageContext.save()
-            }
-            catch let error { print(error) }
-            tableView.reloadData()
-        }
-    )
-        return [deleteAction, editAction]
-}
+            let task = tasks[indexPath.row]
+            
+            let editAction = UITableViewRowAction(
+                                                  style: .default,
+                                                  title: "Edit",
+                                                  handler: { (showAlert, edit)  in
+                                                  self.showAlert(
+                                                    title: "",
+                                                    messege: "Edit list item",
+                                                    currentValue: task )
+                                                 }
+                                                 )
+            let deleteAction = UITableViewRowAction(
+                                                  style: .destructive,
+                                                  title: "Delete",
+                                                  handler: { (action, indexPath) in
+                                                  self.deleteTask(task, indexPath: indexPath)
+                                                 }
+                                                 )
+           return [deleteAction, editAction]
+                                                      
+    }
     
     // MARK: Save content
+    
+    // Edit task
+    
+    private func editRow(_ task: Task,_ newValue: String) {
+        task.name = newValue
+        do {
+            try manageContext.save()
+            } catch let error { print("Failed to save text", error) }
+    }
+     
+    // Save task
     
        private func save(_ taskName: String) {
         
@@ -131,7 +130,21 @@ class MainViewController: UITableViewController {
             tasks.append(task)
             tableView.reloadData()
             
-        } catch let error { print(error.localizedDescription) }
+        } catch let error { print("Failed to save text", error) }
+    }
+    
+    // Delete task
+    
+        private func deleteTask(_ task: Task, indexPath: IndexPath) {
+        manageContext.delete(task)
+        do {
+            try manageContext.save()
+            tasks.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+        }
+        catch let error { print(error) }
+        tableView.reloadData()
+    
     }
     
     // MARK: Insert content
@@ -145,9 +158,11 @@ class MainViewController: UITableViewController {
     } catch let error { print(error.localizedDescription) }
     
   }
-  
-}
-     // MARK: Table setup
+                                                  }
+                                                  
+
+                                                  
+    // MARK: Table setup
 
 extension MainViewController {
         
